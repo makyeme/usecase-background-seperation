@@ -1,1 +1,1 @@
-# usecase-background-seperation
+# usecase-background-separation
