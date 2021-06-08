@@ -1,18 +1,25 @@
-from functools import lru_cache
 import zipfile
+from functools import lru_cache
 from os import makedirs
 from pathlib import Path
 
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+from tensorflow.data import Dataset
+
+CACHE_SIZE = 100
 
 
 class DutsDataset:
+    """Class to handle local copy of DUTS.
+
+    After initialization and , use .training_images] and .test_images to access the images."""
+
     download_link = "http://saliencydetection.net/duts/download/"
 
     def __init__(self, basepath: str):
-        """Initiate the full DUTS dataset. SPecify path were to find/download/extract the dataset.
+        """Initiate the full DUTS dataset. Specify path were to find/download/extract the dataset.
 
         :param basepath: Path to folder where the dataset is/will be stored.
         """
@@ -22,15 +29,16 @@ class DutsDataset:
         self.download_missing()
 
     def _reload_image_cache(self):
+        """Generates DutsImage instances for each availables image."""
         # Internal list of all training images
         self.training_images = [
-            DutsImage(name.stem, self.basepath / "DUTS-TE")
-            for name in (self.basepath / "DUTS-TE").glob("**/*.jpg")
+            DutsImage(name.stem, self.basepath / "DUTS-TR")
+            for name in (self.basepath / "DUTS-TR").glob("**/*.jpg")
         ]
         # Internal list of all test images
         self.test_images = [
-            DutsImage(name.stem, self.basepath / "DUTS-TR")
-            for name in (self.basepath / "DUTS-TR").glob("**/*.jpg")
+            DutsImage(name.stem, self.basepath / "DUTS-TE")
+            for name in (self.basepath / "DUTS-TE").glob("**/*.jpg")
         ]
 
     def download_missing(self):
@@ -52,7 +60,24 @@ class DutsDataset:
                         f"Zipfile not available, download with \n!wget -cP {self.basepath} {self.download_link}{s}.zip\nand run .download_missing() again."
                     )
 
+        # (re-)create internal list of all images
         self._reload_image_cache()
+
+    def get_tf_training_set(self, n=None):
+        n = n or len(self.training_images)
+        img_paths = [str(img.orig_path.resolve()) for img in self.training_images[:n]]
+        target_paths = [
+            str(img.mask_path.resolve()) for img in self.training_images[:n]
+        ]
+        # target_paths = [img.mask_path for img in self.training_images]
+        return Dataset.from_tensor_slices((img_paths, target_paths))
+
+    def get_tf_test_set(self, n=None):
+        n = n or len(self.test_images)
+        img_paths = [str(img.orig_path.resolve()) for img in self.test_images[:n]]
+        target_paths = [str(img.mask_path.resolve()) for img in self.test_images[:n]]
+        # target_paths = [img.mask_path for img in self.training_images]
+        return Dataset.from_tensor_slices((img_paths, target_paths))
 
 
 class DutsImage:
@@ -72,7 +97,7 @@ class DutsImage:
         )
         self.mask_path = (basepath / f"{basepath.name}-Mask" / name).with_suffix(".png")
 
-    @lru_cache(100)
+    @lru_cache(CACHE_SIZE)
     def get_image(self) -> np.ndarray:
         """Return numpy array of unaltered image."""
         return cv2.cvtColor(
@@ -80,12 +105,12 @@ class DutsImage:
             cv2.COLOR_BGR2RGB,
         )
 
-    @lru_cache(100)
+    @lru_cache(CACHE_SIZE)
     def get_mask(self) -> np.ndarray:
         """Returns numpy array for unaltered mask"""
         return cv2.imread(str(self.mask_path.resolve()), cv2.IMREAD_GRAYSCALE) / 255
 
-    @lru_cache(100)
+    @lru_cache(CACHE_SIZE)
     def generate_trimap(self) -> np.ndarray:
         """Returns trimap, generated from ground thruth."""
         mask_ = self.get_mask()  # load mask
@@ -99,6 +124,7 @@ class DutsImage:
         return (erosion + dilation) / 2
 
     def show_image(self, ax=None):
+        """Plot unaltered image."""
         if not ax:
             fig, ax = plt.subplots()
 
@@ -107,6 +133,7 @@ class DutsImage:
         return ax
 
     def show_mask(self, ax=None):
+        """Plot unaltered target mask."""
         if not ax:
             fig, ax = plt.subplots()
         ax.imshow(self.get_mask())
@@ -114,6 +141,7 @@ class DutsImage:
         return ax
 
     def show_trimap(self, ax=None):
+        """Plot the generated trimap."""
         if not ax:
             fig, ax = plt.subplots()
         ax.imshow(self.generate_trimap())
@@ -149,6 +177,7 @@ class DutsImage:
         return ax
 
     def show_all(self, *args, **kwargs):
+        """Plot a grid with some versions of the image."""
         fig, axes = plt.subplots(ncols=4, figsize=(20, 8))
         self.show_image(axes[0])
         self.show_mask(axes[1])
@@ -165,6 +194,9 @@ class DutsImage:
 
     def __repr__(self) -> str:
         return f"<DutsImage ‘{self.name}’>"
+
+    def tf_image(self):
+        pass
 
 
 if __name__ == "__main__":
