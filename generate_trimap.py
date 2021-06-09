@@ -1,3 +1,6 @@
+from pathlib import Path
+from sys import argv
+
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
@@ -46,21 +49,31 @@ def find_trimap(img_path, show_steps=False):
     prediction_1 = (
         tf.argmax(trained_model.predict(tensor), -1)[0].numpy().astype(np.float32)
     )
-    print(prediction_1)
     if show_steps:
         show_step(prediction_1, "First trimap prediction")
 
     # Scale back to original size
-    trimap_upscaled = np.round(
-        cv2.resize(prediction_1, (image.shape[1], image.shape[0]))
+    trimap_upscaled = cv2.resize(
+        prediction_1, (image.shape[1], image.shape[0]), interpolation=cv2.INTER_LANCZOS4
     )
     if show_steps:
         show_step(trimap_upscaled, "Final Trimap")
 
-    return trimap_upscaled.astype(np.uint8)
+    # round back to {0,1,2}
+    final = np.round(trimap_upscaled).astype(np.uint8)
+    return final
+
+
+def save_trimap(trimap_array, output_path):
+    """Export a trimap image as PNG."""
+    normalized = np.atleast_3d(np.round(trimap_array / 2 * 255))
+    cv2.imwrite(output_path, normalized)
 
 
 if __name__ == "__main__":
-    example = find_trimap("../curtains.png", show_steps=True)
-
-    cv2.imwrite("example_trimap.png", np.atleast_3d(example.astype(np.float32) / 2.0))
+    example_path = Path(argv[1] if len(argv) > 1 else "test_dog.jpg")
+    print(f"Generating trimap for {example_path}.")
+    example = find_trimap(str(example_path), show_steps=False)
+    out_path = example_path.parent / (example_path.stem + "_trimap.png")
+    print(f"Saving trimap to {out_path}.")
+    save_trimap(example, str(out_path))
