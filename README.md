@@ -18,7 +18,7 @@ We use the **trimap** approach, in which the alpha channel is generated in two s
 
 ## Installation & usage
 
-You'll need _Tensorflow_ for the trimap model, and _PyTorch_ for the alphamatte. With a new virtual environment, installing the dependencies from _requirements.txt_ should be enough.
+You'll need _Tensorflow_ for the trimap model, and _PyTorch_ for the alphamatte. With a new virtual environment, **installing** the dependencies from _requirements.txt_ should be enough.
 
 ```sh
 # create venv
@@ -28,6 +28,10 @@ source alphavenv/bin/activate
 # install deps
 pip install -r requirements.txt
 ```
+
+To **run** the scripts, 
+
+**TODO**
 
 ## Technical explanation
 
@@ -42,3 +46,5 @@ We created two **wrapper classes** in _[duts.py](duts.py)_ for easy working with
 For automatically generating a trimap from a provided image, a model has to be trained.
 
 ### Alphamatting
+
+**TODO**
