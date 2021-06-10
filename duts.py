@@ -96,6 +96,10 @@ class DutsImage:
             ".jpg"
         )
         self.mask_path = (basepath / f"{basepath.name}-Mask" / name).with_suffix(".png")
+        if not self.orig_path.exists():
+            print(f"Warning: {self.orig_path} not found.")
+        if not self.mask_path.exists():
+            print(f"Warning: {self.mask_path} not found.")
 
     @lru_cache(CACHE_SIZE)
     def get_image(self) -> np.ndarray:

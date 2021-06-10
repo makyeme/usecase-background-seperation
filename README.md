@@ -10,18 +10,23 @@ We use the **trimap** approach, in which the alpha channel is generated in two s
     * the edge zone where the next model should do its thing (gray).
 2. From this trimap, another model generates the final alpha channel.
 
-This project is a collaboration between [Bram](https://github.com/), [Martin](https://github.com/), [Philippe](https://github.com/), and is part of a training in collaboration with [Faktion](https://www.faktion.be). It was completed in two weeks.
+This project is a collaboration between [Bram](https://github.com/), [Martin](https://github.com/), [Philippe](https://github.com/), and is part of a training in collaboration with [Faktion](https://www.faktion.be/). It was completed in two weeks.
 
 ## Installation & usage
+
+You'll need Tensorflow for the trimap model, and PyTorch for the alphamatte. 
 
 ## Technical explanation
 
 ### About the training data
 
-We use de [DUTS](http://saliencydetection.net/duts/) dataset for training our models. It consists of  
+We use the [DUTS dataset](http://saliencydetection.net/duts/) for training our models. It consists of  
 
 We created two wrapper classes in _[duts.py](duts.py)_ for easy working with the structure of this data.
 
 ### Trimap generation
+
+
+
 
 ### Alphamatting

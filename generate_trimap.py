@@ -8,11 +8,14 @@ import tensorflow as tf
 
 from duts import DutsDataset
 
-# load trained model
-trained_model = tf.keras.models.load_model("saved_models/segmentation_model")
+# trained_model = tf.keras.models.load_model("saved_models/segmentation_model")
 
-# # update model with extra training checkpoints
-trained_model.load_weights("saved_models/segmentation_updates/weights.10-0.76.hdf5")
+# # # update model with extra training checkpoints
+# trained_model.load_weights("saved_models/segmentation_updates/weights.10-0.76.hdf5")
+
+
+# load trained model
+trained_model = tf.keras.models.load_model("saved_models/segmentation.h5")
 
 
 def show_step(img, title=""):
