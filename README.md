@@ -14,7 +14,7 @@ We use the **trimap** approach, in which the alpha channel is generated in two s
 
 | Original image                        | Trimap                                     | Alpha channel |
 | ------------------------------------- | ------------------------------------------ | ------------- |
-| ![Original](demo_images/test_dog.jpg) | ![Trimap](demo_images/test_dog_trimap.png) |          ![Alpha](demo_image/test_dog_alpha.jpg)     |
+| ![Original](demo_images/test_dog.jpg) | ![Trimap](demo_images/test_dog_trimap.png) |          ![Alpha](demo_images/test_dog_alpha.png)     |
 
 ## Installation & usage
 
@@ -28,8 +28,13 @@ source alphavenv/bin/activate
 # install deps
 pip install -r requirements.txt
 ```
+To generate a trimap image, you can **run**
 
-To **run** the scripts, 
+```sh
+python generate_trimaps.py path/to/image.jpg
+```
+
+which will generate a trimap image next to this file. 
 
 **TODO**
 
@@ -43,7 +48,9 @@ We created two **wrapper classes** in _[duts.py](duts.py)_ for easy working with
 
 ### Trimap generation
 
-For automatically generating a trimap from a provided image, a model has to be trained.
+For automatically generating a trimap from a provided image, a model has to be trained. We opted to **directly** generate the trimap in one **Pix2Pix model**.
+
+The model is a fresh [U-Net ](https://lmb.informatik.uni-freiburg.de/people/ronneber/u-net/) model, based on the pretrained MobileNetV2. 
 
 ### Alphamatting
 
