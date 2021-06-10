@@ -11,8 +11,8 @@ from duts import DutsDataset
 # load trained model
 trained_model = tf.keras.models.load_model("saved_models/segmentation_model")
 
-# update model with extra training checkpoints
-trained_model.load_weights("saved_models/segmentation_updates/checkpoints")
+# # update model with extra training checkpoints
+trained_model.load_weights("saved_models/segmentation_updates/weights.10-0.76.hdf5")
 
 
 def show_step(img, title=""):
@@ -68,12 +68,8 @@ def find_trimap(img_path, show_steps=False):
     X *= width / 224.0
     Y *= height / 224.0
     ## Calculate some numbers for cutting out a square
-    square_length = np.min(
-        [
-            np.max([X[1] - X[0], Y[1] - Y[0]]) * 1.05,
-            height,
-            width,
-        ]
+    square_length = (
+        np.max([X[1] - X[0], Y[1] - Y[0]]) * 1.05
     )  # 5% increase around subject
     x_padding = (square_length - (X[1] - X[0])) / 2
     y_padding = (square_length - (Y[1] - Y[0])) / 2
@@ -104,7 +100,7 @@ def find_trimap(img_path, show_steps=False):
     # Morphological cleaning
     # kernel = np.ones((5, 5), np.uint8)
     prediction_2 = cv2.morphologyEx(prediction_2, cv2.MORPH_OPEN, kernel)
-    prediction_2 = cv2.morphologyEx(prediction_2, cv2.MORPH_CLOSE, kernel)
+    prediction_2 = cv2.morphologyEx(prediction_2, cv2.MORPH_CLOSE, kernel / 2)
     if show_steps:
         show_step(prediction_2, "Morphologically adj, 2")
 
