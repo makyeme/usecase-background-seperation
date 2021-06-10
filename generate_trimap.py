@@ -15,7 +15,7 @@ trained_model = tf.keras.models.load_model("saved_models/segmentation_model")
 trained_model.load_weights("saved_models/segmentation_updates/checkpoints")
 
 
-def show_step(img, title):
+def show_step(img, title=""):
     """Just to show an image with Matplotlib, to inspect steps."""
     plt.figure()
     plt.imshow(img)
@@ -69,7 +69,11 @@ def find_trimap(img_path, show_steps=False):
     Y *= height / 224.0
     ## Calculate some numbers for cutting out a square
     square_length = np.min(
-        [np.max([X[1] - X[0], Y[1] - Y[0]]) * 1.05, height, width]
+        [
+            np.max([X[1] - X[0], Y[1] - Y[0]]) * 1.05,
+            height,
+            width,
+        ]
     )  # 5% increase around subject
     x_padding = (square_length - (X[1] - X[0])) / 2
     y_padding = (square_length - (Y[1] - Y[0])) / 2
@@ -78,8 +82,12 @@ def find_trimap(img_path, show_steps=False):
     Y += y_padding * np.array([-1, 1])
     X = np.round(X).astype(np.int16)
     Y = np.round(Y).astype(np.int16)
+    ## Check if crop falls outside image
+    X = np.clip(X, 0, width)
+    Y = np.clip(Y, 0, height)
     ## Finally, select this part of the image
     cropped_img = image[Y[0] : Y[1], X[0] : X[1]]
+    cropped_shape = cropped_img.shape[:2]
     if show_steps:
         show_step(cropped_img, "Autocropped subject")
 
@@ -105,7 +113,7 @@ def find_trimap(img_path, show_steps=False):
     prediction_2 = np.round(
         cv2.resize(
             prediction_2,
-            [X[1] - X[0], Y[1] - Y[0]],
+            np.flip(cropped_shape),
             interpolation=cv2.INTER_CUBIC,
         )
     )
@@ -126,9 +134,17 @@ def save_trimap(trimap_array, output_path):
 
 if __name__ == "__main__":
     # EXAMPLE OF USAGE
-    example_path = Path(argv[1] if len(argv) > 1 else "test_dog.jpg")
+
+    # select input image from command line arg
+    example_path = Path(argv[1] if len(argv) > 1 else "test_image.jpg")
     print(f"Generating trimap for {example_path}.")
+
+    # find trimap
     example = find_trimap(str(example_path), show_steps=False)
+
+    # output file name: same as input with _trimap suffix
     out_path = example_path.parent / (example_path.stem + "_trimap.png")
     print(f"Saving trimap to {out_path}.")
+
+    # save to PNG
     save_trimap(example, str(out_path))
